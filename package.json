@@ -1,0 +1,68 @@
+{
+  "name": "focus-homepage",
+  "productName": "FOCUS",
+  "version": "0.1.0",
+  "description": "Your personal, local, AI-powered browser start page",
+  "author": "magranero",
+  "license": "MIT",
+  "homepage": "https://github.com/magranero/focus",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/magranero/focus.git"
+  },
+  "type": "module",
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "concurrently -k -n server,web -c blue,green \"npm run dev:server\" \"npm run dev:web\"",
+    "dev:server": "node server/start.js",
+    "dev:web": "vite web",
+    "build:web": "vite build web",
+    "preview": "npm run build:web && node server/start.js",
+    "start": "npm run build:web && electron .",
+    "test": "node --test \"server/test/*.test.js\"",
+    "dist": "npm run build:web && electron-builder",
+    "dist:mac": "npm run build:web && electron-builder --mac",
+    "dist:win": "npm run build:win && electron-builder --win"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.2",
+    "electron": "^33.3.1",
+    "electron-builder": "^25.1.8",
+    "gridstack": "^11.3.0",
+    "i18next": "^24.2.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-i18next": "^15.4.0",
+    "vite": "^6.0.11"
+  },
+  "build": {
+    "appId": "com.magranero.focus",
+    "productName": "FOCUS",
+    "files": [
+      "electron/**/*",
+      "server/**/*",
+      "web/dist/**/*",
+      "!server/test/**"
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "nsis": {
+      "oneClick": true,
+      "runAfterFinish": true
+    }
+  }
+}

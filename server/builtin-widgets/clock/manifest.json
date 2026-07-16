@@ -1,0 +1,18 @@
+{
+  "id": "clock",
+  "name": { "en": "Clock & World Time", "es": "Reloj y hora mundial" },
+  "emoji": "🕐",
+  "version": "1.0.0",
+  "author": "FOCUS",
+  "description": {
+    "en": "Local time, date, and optionally another city's time.",
+    "es": "Hora local, fecha y opcionalmente la hora de otra ciudad."
+  },
+  "defaultSize": { "w": 3, "h": 2 },
+  "settings": [
+    { "key": "timezone", "label": "Second timezone (e.g. America/New_York)", "type": "text", "required": false },
+    { "key": "tz_label", "label": "Label for second timezone", "type": "text", "required": false }
+  ],
+  "allowedDomains": [],
+  "sampleData": null
+}

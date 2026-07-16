@@ -1,0 +1,15 @@
+{
+  "id": "tasks",
+  "name": { "en": "My Tasks", "es": "Mis tareas" },
+  "emoji": "✅",
+  "version": "1.0.0",
+  "author": "FOCUS",
+  "description": {
+    "en": "A simple local task list. Click to complete, everything stays on your machine.",
+    "es": "Lista de tareas local. Clic para completar, todo queda en tu equipo."
+  },
+  "defaultSize": { "w": 3, "h": 3 },
+  "settings": [],
+  "allowedDomains": [],
+  "sampleData": null
+}

@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="/bridge.js"></script>
+<style>
+  html,body{margin:0;height:100%;font-family:system-ui,-apple-system,sans-serif;color:#e2e8f0;background:transparent}
+  .wrap{position:relative;height:100%;display:flex;flex-direction:column}
+  .title{font-size:11px;opacity:.65;padding:6px 10px 4px}
+  iframe{flex:1;border:0;border-radius:10px;width:100%}
+  .sample{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:8px}
+  .beach{font-size:44px}
+  .tag{font-size:10px;background:#334155;border-radius:6px;padding:2px 8px;opacity:.8}
+  .hint{font-size:12px;opacity:.6;text-align:center;padding:0 14px}
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap"></div>
+<script>
+const T = {
+  en: { sample: 'sample preview', hint: 'Configure a URL to embed your webcam or page' },
+  es: { sample: 'vista de ejemplo', hint: 'Configura una URL para insertar tu webcam o página' }
+};
+(async () => {
+  const ctx = await focus.init();
+  const t = T[ctx.locale] || T.en;
+  const wrap = document.getElementById('wrap');
+  if (!ctx.settings.url) {
+    wrap.innerHTML = `<div class="sample"><div class="beach">🏖️</div>
+      <div>${ctx.sampleData.title}</div>
+      <div class="tag">${t.sample}</div><div class="hint">${t.hint}</div></div>`;
+    focus.requestSetup();
+    return;
+  }
+  const title = ctx.settings.title ? `<div class="title"></div>` : '';
+  wrap.innerHTML = `${title}<iframe allow="autoplay; encrypted-media" referrerpolicy="no-referrer"></iframe>`;
+  if (ctx.settings.title) wrap.querySelector('.title').textContent = ctx.settings.title;
+  wrap.querySelector('iframe').src = ctx.settings.url;
+})();
+</script>
+</body>
+</html>

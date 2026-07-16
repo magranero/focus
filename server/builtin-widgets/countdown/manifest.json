@@ -1,0 +1,18 @@
+{
+  "id": "countdown",
+  "name": { "en": "Countdown", "es": "Cuenta atrás" },
+  "emoji": "⏳",
+  "version": "1.0.0",
+  "author": "FOCUS",
+  "description": {
+    "en": "Days left until a date you care about (holidays!).",
+    "es": "Días que faltan para una fecha importante (¡vacaciones!)."
+  },
+  "defaultSize": { "w": 3, "h": 2 },
+  "settings": [
+    { "key": "title", "label": "What are you counting down to?", "type": "text", "required": false },
+    { "key": "date", "label": "Date (YYYY-MM-DD)", "type": "text", "required": true }
+  ],
+  "allowedDomains": [],
+  "sampleData": { "title": "Summer holidays", "days": 23 }
+}

@@ -1,0 +1,15 @@
+{
+  "id": "links",
+  "name": { "en": "Quick Links", "es": "Enlaces rápidos" },
+  "emoji": "🔗",
+  "version": "1.0.0",
+  "author": "FOCUS",
+  "description": {
+    "en": "Your favorite sites, one click away.",
+    "es": "Tus sitios favoritos a un clic."
+  },
+  "defaultSize": { "w": 4, "h": 2 },
+  "settings": [],
+  "allowedDomains": [],
+  "sampleData": null
+}

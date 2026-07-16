@@ -1,0 +1,86 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="/bridge.js"></script>
+<style>
+  html,body{margin:0;height:100%;font-family:system-ui,-apple-system,sans-serif;color:#e2e8f0;background:transparent}
+  .wrap{height:100%;padding:10px;box-sizing:border-box;display:flex;flex-direction:column;gap:6px}
+  .grid{flex:1;display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px;overflow-y:auto;align-content:start}
+  a{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:9px;text-decoration:none;color:#e2e8f0;font-size:10.5px;background:#1e293b66;position:relative}
+  a:hover{background:#1e293b}
+  a img{width:22px;height:22px;border-radius:5px}
+  a .x{position:absolute;top:2px;right:4px;font-size:9px;color:#f87171;opacity:0}
+  a:hover .x{opacity:.9}
+  a span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  form{display:none;gap:5px}
+  .wrap.editing form{display:flex}
+  input{flex:1;background:#1e293b;border:1px solid #334155;border-radius:7px;color:#e2e8f0;padding:5px 8px;font-size:11px;outline:none;min-width:0}
+  .add,button{background:#33415588;color:#e2e8f0;border:0;border-radius:7px;font-size:11px;padding:5px 9px;cursor:pointer;align-self:flex-start}
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="grid" id="grid"></div>
+  <form id="form">
+    <input id="name" maxlength="20">
+    <input id="url" type="url" required>
+    <button type="submit">✓</button>
+  </form>
+  <button class="add" id="add">＋</button>
+</div>
+<script>
+const DEFAULTS = [
+  { name: 'Gmail', url: 'https://mail.google.com' },
+  { name: 'YouTube', url: 'https://youtube.com' },
+  { name: 'GitHub', url: 'https://github.com' },
+  { name: 'Maps', url: 'https://maps.google.com' }
+];
+const T = {
+  en: { name: 'Name', url: 'https://…' },
+  es: { name: 'Nombre', url: 'https://…' }
+};
+(async () => {
+  const ctx = await focus.init();
+  const t = T[ctx.locale] || T.en;
+  const grid = document.getElementById('grid');
+  const wrap = document.getElementById('wrap');
+  document.getElementById('name').placeholder = t.name;
+  document.getElementById('url').placeholder = t.url;
+  let links = (await focus.store.get('links')) || DEFAULTS;
+
+  function favicon(url) {
+    try { return `https://www.google.com/s2/favicons?domain=${new URL(url).hostname}&sz=64`; }
+    catch { return ''; }
+  }
+  function draw() {
+    grid.innerHTML = '';
+    links.forEach((l, i) => {
+      const a = document.createElement('a');
+      a.href = l.url; a.target = '_blank'; a.rel = 'noreferrer';
+      a.innerHTML = `<img alt=""><span></span><div class="x">✕</div>`;
+      a.querySelector('img').src = favicon(l.url);
+      a.querySelector('span').textContent = l.name;
+      a.querySelector('.x').onclick = (e) => {
+        e.preventDefault(); e.stopPropagation();
+        links.splice(i, 1); focus.store.set('links', links); draw();
+      };
+      grid.appendChild(a);
+    });
+  }
+  document.getElementById('add').onclick = () => wrap.classList.toggle('editing');
+  document.getElementById('form').onsubmit = (e) => {
+    e.preventDefault();
+    const name = document.getElementById('name').value.trim();
+    const url = document.getElementById('url').value.trim();
+    if (!url) return;
+    links.push({ name: name || new URL(url).hostname.replace('www.', ''), url });
+    focus.store.set('links', links);
+    e.target.reset(); wrap.classList.remove('editing');
+    draw();
+  };
+  draw();
+})();
+</script>
+</body>
+</html>

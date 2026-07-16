@@ -1,0 +1,26 @@
+{
+  "id": "weather",
+  "name": { "en": "Weather", "es": "El tiempo" },
+  "emoji": "🌤️",
+  "version": "1.0.0",
+  "author": "FOCUS",
+  "description": {
+    "en": "Current weather and 3-day forecast via Open-Meteo (no API key needed).",
+    "es": "Tiempo actual y previsión de 3 días vía Open-Meteo (sin API key)."
+  },
+  "defaultSize": { "w": 3, "h": 2 },
+  "settings": [
+    { "key": "city", "label": "City", "type": "text", "required": true, "help": "e.g. Madrid" }
+  ],
+  "allowedDomains": ["open-meteo.com"],
+  "sampleData": {
+    "city": "Madrid",
+    "temp": 24,
+    "code": 1,
+    "days": [
+      { "d": "Mon", "min": 17, "max": 28, "code": 0 },
+      { "d": "Tue", "min": 18, "max": 30, "code": 2 },
+      { "d": "Wed", "min": 19, "max": 31, "code": 3 }
+    ]
+  }
+}

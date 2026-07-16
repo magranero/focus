@@ -1,0 +1,25 @@
+{
+  "id": "news",
+  "name": { "en": "News (RSS)", "es": "Noticias (RSS)" },
+  "emoji": "📰",
+  "version": "1.0.0",
+  "author": "FOCUS",
+  "description": {
+    "en": "Headlines from any RSS feed. Even cat news in your country.",
+    "es": "Titulares de cualquier feed RSS. Hasta noticias de gatos en tu país."
+  },
+  "defaultSize": { "w": 3, "h": 3 },
+  "settings": [
+    { "key": "feed_url", "label": "RSS feed URL", "type": "url", "required": false, "help": "Default: BBC World" },
+    { "key": "title", "label": "Widget title", "type": "text", "required": false }
+  ],
+  "allowedDomains": ["*"],
+  "sampleData": {
+    "title": "Cat news 🐈",
+    "items": [
+      { "title": "Local cat elected honorary mayor for third year", "link": "#" },
+      { "title": "Study confirms: your cat does recognize you (it just doesn't care)", "link": "#" },
+      { "title": "Shelter breaks adoption record after kitten livestream", "link": "#" }
+    ]
+  }
+}

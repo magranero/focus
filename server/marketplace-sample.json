@@ -1,0 +1,70 @@
+{
+  "widgets": [
+    {
+      "id": "sample-pomodoro",
+      "name": "Pomodoro Timer",
+      "emoji": "🍅",
+      "author": "FOCUS team",
+      "description": "25/5 pomodoro timer with session counter.",
+      "price": 0,
+      "currency": "eur",
+      "category": "productivity",
+      "pkg": {
+        "manifest": {
+          "name": "Pomodoro Timer",
+          "emoji": "🍅",
+          "version": "1.0.0",
+          "author": "FOCUS team",
+          "defaultSize": { "w": 3, "h": 2 },
+          "settings": [],
+          "allowedDomains": [],
+          "sampleData": null
+        },
+        "html": "<!doctype html><html><head><meta charset=\"utf-8\"><script src=\"/bridge.js\"></script><style>html,body{margin:0;height:100%;font-family:system-ui;color:#e2e8f0;background:transparent}.wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:8px}.time{font-size:34px;font-weight:700;font-variant-numeric:tabular-nums}button{background:#38bdf8;color:#0b1220;border:0;border-radius:8px;padding:6px 14px;font-weight:600;cursor:pointer}.small{font-size:11px;opacity:.7}</style></head><body><div class=\"wrap\"><div class=\"time\" id=\"t\">25:00</div><button id=\"b\">Start</button><div class=\"small\" id=\"s\"></div></div><script>let total=25*60,left=total,timer=null,sessions=0;const t=document.getElementById('t'),b=document.getElementById('b'),s=document.getElementById('s');function draw(){const m=String(Math.floor(left/60)).padStart(2,'0'),sec=String(left%60).padStart(2,'0');t.textContent=m+':'+sec}b.onclick=()=>{if(timer){clearInterval(timer);timer=null;b.textContent='Start';return}b.textContent='Pause';timer=setInterval(()=>{left--;if(left<=0){sessions++;s.textContent=sessions+' sessions';left=total}draw()},1000)};draw();</script></body></html>"
+      }
+    },
+    {
+      "id": "sample-quotes",
+      "name": "Daily Stoic Quote",
+      "emoji": "🏛️",
+      "author": "FOCUS team",
+      "description": "A rotating stoic quote to start the day.",
+      "price": 0,
+      "currency": "eur",
+      "category": "inspiration",
+      "pkg": {
+        "manifest": {
+          "name": "Daily Stoic Quote",
+          "emoji": "🏛️",
+          "version": "1.0.0",
+          "author": "FOCUS team",
+          "defaultSize": { "w": 4, "h": 2 },
+          "settings": [],
+          "allowedDomains": [],
+          "sampleData": null
+        },
+        "html": "<!doctype html><html><head><meta charset=\"utf-8\"><script src=\"/bridge.js\"></script><style>html,body{margin:0;height:100%;font-family:Georgia,serif;color:#e2e8f0;background:transparent}.wrap{display:flex;flex-direction:column;justify-content:center;height:100%;padding:16px;box-sizing:border-box}.q{font-size:15px;font-style:italic;line-height:1.5}.a{margin-top:8px;font-size:12px;opacity:.7;text-align:right}</style></head><body><div class=\"wrap\"><div class=\"q\" id=\"q\"></div><div class=\"a\" id=\"a\"></div></div><script>const quotes=[[\"You have power over your mind — not outside events.\",\"Marcus Aurelius\"],[\"We suffer more often in imagination than in reality.\",\"Seneca\"],[\"No man is free who is not master of himself.\",\"Epictetus\"],[\"He who fears death will never do anything worthy of a living man.\",\"Seneca\"],[\"The obstacle is the way.\",\"Marcus Aurelius\"]];const d=new Date();const i=(d.getFullYear()*366+d.getMonth()*31+d.getDate())%quotes.length;document.getElementById('q').textContent='“'+quotes[i][0]+'”';document.getElementById('a').textContent='— '+quotes[i][1];</script></body></html>"
+      }
+    },
+    {
+      "id": "sample-crypto",
+      "name": "Crypto Ticker Pro",
+      "emoji": "📈",
+      "author": "widgetsmith",
+      "description": "Live BTC/ETH prices with 24h change sparkline.",
+      "price": 299,
+      "currency": "eur",
+      "category": "finance"
+    },
+    {
+      "id": "sample-league",
+      "name": "La Liga Standings",
+      "emoji": "⚽",
+      "author": "futboldata",
+      "description": "Top of the table, next match and live scores.",
+      "price": 199,
+      "currency": "eur",
+      "category": "sports"
+    }
+  ]
+}

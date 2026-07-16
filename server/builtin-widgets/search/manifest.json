@@ -1,0 +1,17 @@
+{
+  "id": "search",
+  "name": { "en": "Search Bar", "es": "Buscador" },
+  "emoji": "🔍",
+  "version": "1.0.0",
+  "author": "FOCUS",
+  "description": {
+    "en": "Search the web straight from your start page.",
+    "es": "Busca en la web directamente desde tu página de inicio."
+  },
+  "defaultSize": { "w": 6, "h": 1 },
+  "settings": [
+    { "key": "engine", "label": "Engine (google | duckduckgo | bing)", "type": "text", "required": false }
+  ],
+  "allowedDomains": [],
+  "sampleData": null
+}

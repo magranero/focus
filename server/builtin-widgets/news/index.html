@@ -1,0 +1,67 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="/bridge.js"></script>
+<style>
+  html,body{margin:0;height:100%;font-family:system-ui,-apple-system,sans-serif;color:#e2e8f0;background:transparent}
+  .wrap{display:flex;flex-direction:column;height:100%;padding:10px 12px;box-sizing:border-box;gap:6px;position:relative}
+  h3{margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.06em;opacity:.6}
+  ul{list-style:none;margin:0;padding:0;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:7px}
+  a{color:#e2e8f0;text-decoration:none;font-size:12.5px;line-height:1.35;display:block}
+  a:hover{color:#38bdf8}
+  .sample{position:absolute;top:8px;right:10px;font-size:9px;background:#334155;border-radius:6px;padding:2px 6px;opacity:.8}
+  .err{font-size:12px;color:#fca5a5}
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap"></div>
+<script>
+const DEFAULT_FEED = 'https://feeds.bbci.co.uk/news/world/rss.xml';
+const T = {
+  en: { news: 'News', sample: 'sample data', err: 'Could not load feed' },
+  es: { news: 'Noticias', sample: 'datos de ejemplo', err: 'No se pudo cargar el feed' }
+};
+function draw(wrap, title, items, isSample, t) {
+  wrap.innerHTML = `${isSample ? `<div class="sample">${t.sample}</div>` : ''}<h3></h3><ul></ul>`;
+  wrap.querySelector('h3').textContent = title;
+  const ul = wrap.querySelector('ul');
+  items.slice(0, 12).forEach((it) => {
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    a.textContent = it.title;
+    a.href = it.link || '#';
+    a.target = '_blank';
+    a.rel = 'noreferrer';
+    li.appendChild(a);
+    ul.appendChild(li);
+  });
+}
+(async () => {
+  const ctx = await focus.init();
+  const t = T[ctx.locale] || T.en;
+  const wrap = document.getElementById('wrap');
+  const feed = ctx.settings.feed_url || DEFAULT_FEED;
+  try {
+    const res = await focus.fetch(feed);
+    if (res.status !== 200) throw new Error('http ' + res.status);
+    const doc = new DOMParser().parseFromString(res.bodyText, 'text/xml');
+    let items = [...doc.querySelectorAll('item')].map((n) => ({
+      title: n.querySelector('title')?.textContent || '',
+      link: n.querySelector('link')?.textContent || '#'
+    }));
+    if (!items.length) { // Atom fallback
+      items = [...doc.querySelectorAll('entry')].map((n) => ({
+        title: n.querySelector('title')?.textContent || '',
+        link: n.querySelector('link')?.getAttribute('href') || '#'
+      }));
+    }
+    const feedTitle = ctx.settings.title || doc.querySelector('channel > title, feed > title')?.textContent || t.news;
+    draw(wrap, feedTitle, items, false, t);
+  } catch (e) {
+    draw(wrap, ctx.sampleData.title, ctx.sampleData.items, true, t);
+  }
+})();
+</script>
+</body>
+</html>

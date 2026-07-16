@@ -1,0 +1,18 @@
+{
+  "id": "embed",
+  "name": { "en": "Webcam / Embed", "es": "Webcam / Embed" },
+  "emoji": "📷",
+  "version": "1.0.0",
+  "author": "FOCUS",
+  "description": {
+    "en": "Embed any page: your favorite beach webcam, a YouTube live, a dashboard…",
+    "es": "Inserta cualquier página: la webcam de tu playa favorita, un directo de YouTube, un dashboard…"
+  },
+  "defaultSize": { "w": 4, "h": 3 },
+  "settings": [
+    { "key": "url", "label": "URL to embed", "type": "url", "required": true, "help": "e.g. a YouTube embed link: https://www.youtube.com/embed/VIDEO_ID" },
+    { "key": "title", "label": "Title", "type": "text", "required": false }
+  ],
+  "allowedDomains": [],
+  "sampleData": { "title": "Playa de la Concha 🏖️" }
+}

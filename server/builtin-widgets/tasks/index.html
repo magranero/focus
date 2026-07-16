@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="/bridge.js"></script>
+<style>
+  html,body{margin:0;height:100%;font-family:system-ui,-apple-system,sans-serif;color:#e2e8f0;background:transparent}
+  .wrap{display:flex;flex-direction:column;height:100%;padding:10px 12px;box-sizing:border-box;gap:6px}
+  form{display:flex;gap:6px}
+  input{flex:1;background:#1e293b;border:1px solid #334155;border-radius:8px;color:#e2e8f0;padding:6px 9px;font-size:12px;outline:none}
+  input:focus{border-color:#38bdf8}
+  button{background:#38bdf8;color:#0b1220;border:0;border-radius:8px;width:28px;font-size:16px;font-weight:700;cursor:pointer}
+  ul{list-style:none;margin:0;padding:0;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:4px}
+  li{display:flex;align-items:center;gap:8px;font-size:12.5px;padding:5px 7px;border-radius:7px;background:#1e293b66;cursor:pointer}
+  li.done span{text-decoration:line-through;opacity:.45}
+  li .x{margin-left:auto;opacity:0;font-size:11px;color:#f87171}
+  li:hover .x{opacity:.8}
+  .check{width:14px;height:14px;border:1.5px solid #64748b;border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px}
+  li.done .check{background:#22c55e;border-color:#22c55e;color:#0b1220}
+  .empty{font-size:12px;opacity:.5;text-align:center;margin-top:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <form id="form"><input id="inp" maxlength="120"><button type="submit">+</button></form>
+  <ul id="list"></ul>
+</div>
+<script>
+const T = {
+  en: { ph: 'Add a task…', empty: 'Nothing pending. Enjoy! ✨' },
+  es: { ph: 'Añade una tarea…', empty: 'Nada pendiente. ¡Disfruta! ✨' }
+};
+(async () => {
+  const ctx = await focus.init();
+  const t = T[ctx.locale] || T.en;
+  const inp = document.getElementById('inp');
+  const list = document.getElementById('list');
+  inp.placeholder = t.ph;
+  let tasks = (await focus.store.get('tasks')) || [];
+
+  function save() { focus.store.set('tasks', tasks); }
+  function draw() {
+    list.innerHTML = '';
+    if (!tasks.length) { list.innerHTML = `<div class="empty">${t.empty}</div>`; return; }
+    tasks.forEach((task, i) => {
+      const li = document.createElement('li');
+      li.className = task.done ? 'done' : '';
+      li.innerHTML = `<div class="check">${task.done ? '✓' : ''}</div><span></span><div class="x">✕</div>`;
+      li.querySelector('span').textContent = task.text;
+      li.onclick = (e) => {
+        if (e.target.classList.contains('x')) { tasks.splice(i, 1); }
+        else { task.done = !task.done; }
+        save(); draw();
+      };
+      list.appendChild(li);
+    });
+  }
+  document.getElementById('form').onsubmit = (e) => {
+    e.preventDefault();
+    const v = inp.value.trim();
+    if (!v) return;
+    tasks.unshift({ text: v, done: false });
+    inp.value = '';
+    save(); draw();
+  };
+  draw();
+})();
+</script>
+</body>
+</html>

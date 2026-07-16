@@ -1,0 +1,71 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="/bridge.js"></script>
+<style>
+  html,body{margin:0;height:100%;font-family:system-ui,-apple-system,sans-serif;color:#e2e8f0;background:transparent}
+  .wrap{display:flex;flex-direction:column;justify-content:center;height:100%;padding:12px 14px;box-sizing:border-box;gap:6px}
+  .now{display:flex;align-items:center;gap:10px}
+  .icon{font-size:34px}
+  .temp{font-size:30px;font-weight:700}
+  .city{font-size:12px;opacity:.7}
+  .days{display:flex;gap:10px;font-size:11px;opacity:.85}
+  .day{display:flex;flex-direction:column;align-items:center;gap:1px}
+  .sample{position:absolute;top:6px;right:8px;font-size:9px;background:#334155;border-radius:6px;padding:2px 6px;opacity:.8}
+  .err{font-size:12px;color:#fca5a5}
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap"></div>
+<script>
+const ICONS = { 0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',61:'🌧️',63:'🌧️',65:'🌧️',71:'🌨️',80:'🌦️',95:'⛈️' };
+const T = {
+  en: { sample: 'sample data', err: 'Could not load weather' },
+  es: { sample: 'datos de ejemplo', err: 'No se pudo cargar el tiempo' }
+};
+function icon(code){ return ICONS[code] || '🌡️'; }
+
+function render(el, data, isSample, t) {
+  el.innerHTML = `
+    ${isSample ? `<div class="sample">${t.sample}</div>` : ''}
+    <div class="now">
+      <div class="icon">${icon(data.code)}</div>
+      <div><div class="temp">${Math.round(data.temp)}°</div><div class="city">${data.city}</div></div>
+    </div>
+    <div class="days">${data.days.map(d =>
+      `<div class="day"><span>${d.d}</span><span>${icon(d.code)}</span><span>${Math.round(d.min)}°/${Math.round(d.max)}°</span></div>`
+    ).join('')}</div>`;
+}
+
+(async () => {
+  const ctx = await focus.init();
+  const t = T[ctx.locale] || T.en;
+  const wrap = document.getElementById('wrap');
+  const city = ctx.settings.city;
+  if (!city) {
+    render(wrap, ctx.sampleData, true, t);
+    focus.requestSetup();
+    return;
+  }
+  try {
+    const geo = await focus.fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=${ctx.locale}`);
+    const g = JSON.parse(geo.bodyText).results?.[0];
+    if (!g) throw new Error('city not found');
+    const fc = await focus.fetch(`https://api.open-meteo.com/v1/forecast?latitude=${g.latitude}&longitude=${g.longitude}&current=temperature_2m,weather_code&daily=temperature_2m_min,temperature_2m_max,weather_code&forecast_days=3&timezone=auto`);
+    const d = JSON.parse(fc.bodyText);
+    const days = d.daily.time.map((iso, i) => ({
+      d: new Date(iso).toLocaleDateString(ctx.locale, { weekday: 'short' }),
+      min: d.daily.temperature_2m_min[i],
+      max: d.daily.temperature_2m_max[i],
+      code: d.daily.weather_code[i]
+    }));
+    render(wrap, { city: g.name, temp: d.current.temperature_2m, code: d.current.weather_code, days }, false, t);
+    document.body.style.cursor = 'default';
+  } catch (e) {
+    wrap.innerHTML = `<div class="err">${t.err}</div>`;
+  }
+})();
+</script>
+</body>
+</html>

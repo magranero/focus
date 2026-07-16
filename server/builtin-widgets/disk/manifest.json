@@ -1,0 +1,15 @@
+{
+  "id": "disk",
+  "name": { "en": "Disk Space", "es": "Espacio en disco" },
+  "emoji": "💾",
+  "version": "1.0.0",
+  "author": "FOCUS",
+  "description": {
+    "en": "Free space on your main drive, straight from your machine.",
+    "es": "Espacio libre de tu disco principal, directo de tu equipo."
+  },
+  "defaultSize": { "w": 2, "h": 2 },
+  "settings": [],
+  "allowedDomains": ["focus://system"],
+  "sampleData": { "totalGb": 512, "freeGb": 187.4, "usedPct": 63 }
+}

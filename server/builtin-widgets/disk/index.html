@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="/bridge.js"></script>
+<style>
+  html,body{margin:0;height:100%;font-family:system-ui,-apple-system,sans-serif;color:#e2e8f0;background:transparent}
+  .wrap{display:flex;flex-direction:column;justify-content:center;height:100%;padding:12px 14px;box-sizing:border-box;gap:8px}
+  .free{font-size:22px;font-weight:700}
+  .free small{font-size:12px;font-weight:400;opacity:.6}
+  .bar{height:8px;background:#334155;border-radius:99px;overflow:hidden}
+  .fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#22c55e,#eab308 70%,#ef4444)}
+  .pct{font-size:11px;opacity:.6}
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap"></div>
+<script>
+const T = {
+  en: { free: 'free', used: 'used' },
+  es: { free: 'libres', used: 'usado' }
+};
+(async () => {
+  const ctx = await focus.init();
+  const t = T[ctx.locale] || T.en;
+  const wrap = document.getElementById('wrap');
+  let d = ctx.sampleData;
+  try {
+    const res = await focus.fetch('focus://system/disk');
+    d = JSON.parse(res.bodyText);
+  } catch {}
+  wrap.innerHTML = `
+    <div class="free">${d.freeGb} GB <small>${t.free} · ${d.totalGb} GB</small></div>
+    <div class="bar"><div class="fill" style="width:${d.usedPct}%"></div></div>
+    <div class="pct">${d.usedPct}% ${t.used}</div>`;
+})();
+</script>
+</body>
+</html>

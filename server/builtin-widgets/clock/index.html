@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="/bridge.js"></script>
+<style>
+  html,body{margin:0;height:100%;font-family:system-ui,-apple-system,sans-serif;color:#e2e8f0;background:transparent}
+  .wrap{display:flex;flex-direction:column;justify-content:center;align-items:center;height:100%;gap:2px}
+  .time{font-size:clamp(24px,18vw,44px);font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-1px}
+  .date{font-size:13px;opacity:.7;text-transform:capitalize}
+  .second{margin-top:6px;font-size:12px;opacity:.6;font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="time" id="time"></div>
+  <div class="date" id="date"></div>
+  <div class="second" id="second" hidden></div>
+</div>
+<script>
+(async () => {
+  const ctx = await focus.init();
+  const loc = ctx.locale || 'en';
+  const timeEl = document.getElementById('time');
+  const dateEl = document.getElementById('date');
+  const secEl = document.getElementById('second');
+  const tz = ctx.settings.timezone;
+
+  function tick() {
+    const now = new Date();
+    timeEl.textContent = now.toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit' });
+    dateEl.textContent = now.toLocaleDateString(loc, { weekday: 'long', day: 'numeric', month: 'long' });
+    if (tz) {
+      try {
+        const t = now.toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit', timeZone: tz });
+        secEl.hidden = false;
+        secEl.textContent = `${ctx.settings.tz_label || tz.split('/').pop().replace('_', ' ')} · ${t}`;
+      } catch { secEl.hidden = true; }
+    }
+  }
+  tick();
+  setInterval(tick, 5000);
+})();
+</script>
+</body>
+</html>
