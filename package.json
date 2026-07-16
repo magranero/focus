@@ -19,7 +19,7 @@
     "build:web": "vite build web",
     "preview": "npm run build:web && node server/start.js",
     "start": "npm run build:web && electron .",
-    "test": "node --test \"server/test/*.test.js\"",
+    "test": "node --test server/test/*.test.js",
     "dist": "npm run build:web && electron-builder",
     "dist:mac": "npm run build:web && electron-builder --mac",
     "dist:win": "npm run build:win && electron-builder --win"
