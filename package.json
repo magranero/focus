@@ -53,7 +53,9 @@
       "target": [
         "dmg",
         "zip"
-      ]
+      ],
+      "hardenedRuntime": true,
+      "notarize": true
     },
     "win": {
       "target": [
