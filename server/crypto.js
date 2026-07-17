@@ -24,9 +24,16 @@ let cachedKey = null;
 function getMasterKey() {
   if (cachedKey) return cachedKey;
   const file = keyFile();
+  const plainFile = path.join(getDataDir(), 'master.key');
   if (fs.existsSync(file)) {
     const raw = fs.readFileSync(file);
     cachedKey = protector ? protector.decrypt(raw) : raw;
+  } else if (protector && fs.existsSync(plainFile)) {
+    // Data created in headless/dev mode: adopt the plain key and upgrade it
+    // to OS-keychain protection so existing secrets keep decrypting.
+    cachedKey = fs.readFileSync(plainFile);
+    fs.writeFileSync(file, protector.encrypt(cachedKey), { mode: 0o600 });
+    fs.unlinkSync(plainFile);
   } else {
     cachedKey = crypto.randomBytes(32);
     const raw = protector ? protector.encrypt(cachedKey) : cachedKey;
