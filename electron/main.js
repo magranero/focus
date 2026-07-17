@@ -33,7 +33,9 @@ async function boot() {
   const { createApp, PORT } = await import('../server/index.js');
   serverPort = PORT;
   await new Promise((resolve, reject) => {
-    createApp().listen(PORT, '127.0.0.1', resolve).on('error', reject);
+    createApp({ onQuit: () => app.quit() })
+      .listen(PORT, '127.0.0.1', resolve)
+      .on('error', reject);
   });
 
   createTray();

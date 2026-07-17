@@ -77,7 +77,11 @@ const resources = {
         startPageHelp: 'Copy this address and set it as your browser’s home page:',
         widgetSettings: 'Widget settings',
         aiPing: 'Test AI',
-        close: 'Close'
+        close: 'Close',
+        app: 'Application',
+        trayHint: 'FOCUS lives in your menu bar (the ◎ icon): open your page, settings or quit from there. You can also quit right here:',
+        quit: 'Quit FOCUS',
+        quitDone: 'FOCUS is closed. See you tomorrow!'
       },
       widgetSettings: {
         title: 'Configure “{{name}}”',
@@ -175,7 +179,11 @@ const resources = {
         startPageHelp: 'Copia esta dirección y ponla como página de inicio de tu navegador:',
         widgetSettings: 'Ajustes del widget',
         aiPing: 'Probar IA',
-        close: 'Cerrar'
+        close: 'Cerrar',
+        app: 'Aplicación',
+        trayHint: 'FOCUS vive en tu barra de menús (el icono ◎): desde ahí puedes abrir tu página, los ajustes o salir. También puedes salir desde aquí:',
+        quit: 'Salir de FOCUS',
+        quitDone: 'FOCUS está cerrado. ¡Hasta mañana!'
       },
       widgetSettings: {
         title: 'Configurar «{{name}}»',

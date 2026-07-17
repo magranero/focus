@@ -124,6 +124,21 @@ export default function SettingsPanel({ state, onClose, refresh }) {
           </div>
         </section>
 
+        <section>
+          <h3>{t('settings.app')}</h3>
+          <p className="hint">{t('settings.trayHint')}</p>
+          <button
+            className="danger"
+            onClick={async () => {
+              await api.quit().catch(() => {});
+              document.body.innerHTML =
+                `<div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#94a3b8;font-family:system-ui">👋 ${t('settings.quitDone')}</div>`;
+            }}
+          >
+            ⏻ {t('settings.quit')}
+          </button>
+        </section>
+
         {msg && <p className={msg.ok ? 'success' : 'error'}>{msg.text}</p>}
         <div className="row spread">
           <span />

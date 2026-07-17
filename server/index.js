@@ -13,7 +13,7 @@ import { getDiskInfo } from './system.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const PORT = Number(process.env.FOCUS_PORT || 8642);
 
-export function createApp() {
+export function createApp({ onQuit } = {}) {
   const app = express();
   app.use(express.json({ limit: '2mb' }));
 
@@ -423,13 +423,36 @@ export function createApp() {
     res.json({ manifest, html });
   });
 
+  // Quit the whole app (tray process included) from the web UI.
+  app.post('/api/quit', (req, res) => {
+    res.json({ ok: true });
+    setTimeout(() => {
+      if (onQuit) onQuit();
+      else process.exit(0);
+    }, 300);
+  });
+
   // ---- Frontend (built SPA) ----
 
   const dist = path.join(__dirname, '..', 'web', 'dist');
   if (fs.existsSync(dist)) {
-    app.use(express.static(dist));
+    // Hashed assets are immutable; index.html must always revalidate or
+    // browsers keep serving a stale bundle after FOCUS updates.
+    app.use(
+      express.static(dist, {
+        index: false,
+        setHeaders: (res, filePath) => {
+          if (filePath.includes(`${path.sep}assets${path.sep}`)) {
+            res.setHeader('cache-control', 'public, max-age=31536000, immutable');
+          } else {
+            res.setHeader('cache-control', 'no-cache');
+          }
+        }
+      })
+    );
     app.get('*', (req, res, next) => {
       if (req.path.startsWith('/api/') || req.path.startsWith('/widgets/')) return next();
+      res.setHeader('cache-control', 'no-cache');
       res.sendFile(path.join(dist, 'index.html'));
     });
   }

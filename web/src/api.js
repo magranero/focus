@@ -29,7 +29,8 @@ export const api = {
   aiEdit: (body) => req('POST', '/api/ai/edit', body),
   catalog: () => req('GET', '/api/marketplace/catalog'),
   install: (body) => req('POST', '/api/marketplace/install', body),
-  exportWidget: (id) => req('GET', `/api/widgets/${id}/export`)
+  exportWidget: (id) => req('GET', `/api/widgets/${id}/export`),
+  quit: () => req('POST', '/api/quit')
 };
 
 /** Manifest names/descriptions can be strings or {en, es} objects. */
