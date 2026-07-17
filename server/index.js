@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import * as store from './store.js';
 import { TEMPLATES } from './templates.js';
 import { PROVIDERS, testProvider, chat } from './ai/providers.js';
-import { createJob, listJobs } from './ai/generator.js';
+import { createJob, createEditJob, listJobs } from './ai/generator.js';
 import { scanText, redactText } from './lib/credentialScan.js';
 import { getDiskInfo } from './system.js';
 
@@ -279,6 +279,48 @@ export function createApp() {
     });
   });
 
+  // Re-chat with the agent that built a custom widget.
+  app.post('/api/ai/edit', (req, res) => {
+    const { instanceId, instruction } = req.body || {};
+    if (!instruction || !String(instruction).trim()) {
+      return res.status(400).json({ error: 'empty instruction' });
+    }
+    if (!store.getConfig().ai.provider) {
+      return res.status(400).json({ error: 'no AI provider configured' });
+    }
+    const findings = scanText(instruction);
+    let clean = String(instruction);
+    const extraSecrets = [];
+    if (findings.length) {
+      clean = redactText(instruction, findings);
+      const { secretsSet } = store.getWidgetSettings(instanceId);
+      findings.forEach((f, i) => {
+        extraSecrets.push({ key: `secret_${secretsSet.length + i + 1}`, kind: f.kind });
+      });
+      store.setWidgetSettings(
+        instanceId,
+        Object.fromEntries(findings.map((f, i) => [extraSecrets[i].key, f.match])),
+        extraSecrets.map((s) => s.key)
+      );
+    }
+    try {
+      const job = createEditJob({
+        instanceId,
+        instruction: clean,
+        locale: store.getConfig().locale,
+        extraSecrets
+      });
+      res.json({
+        job: { id: job.id, status: job.status },
+        credentialWarning: findings.length
+          ? { count: findings.length, kinds: findings.map((f) => f.kind) }
+          : null
+      });
+    } catch (err) {
+      res.status(404).json({ error: err.message });
+    }
+  });
+
   app.get('/api/jobs', (req, res) => {
     res.json(listJobs().map(({ id, status, error, prompt }) => ({ id, status, error, prompt })));
   });
@@ -305,16 +347,19 @@ export function createApp() {
   // ---- Marketplace ----
 
   app.get('/api/marketplace/catalog', async (req, res) => {
-    const base = store.getConfig().marketplaceUrl;
+    const base = normalizeMarketplaceUrl(store.getConfig().marketplaceUrl);
     try {
+      if (!base) throw new Error('no marketplace URL configured');
       const r = await fetch(`${base}/api/widgets`, { signal: AbortSignal.timeout(6000) });
-      if (!r.ok) throw new Error(`marketplace ${r.status}`);
-      res.json({ source: 'remote', ...(await r.json()) });
-    } catch {
+      if (!r.ok) throw new Error(`marketplace answered HTTP ${r.status}`);
+      const data = await r.json();
+      if (!Array.isArray(data.widgets)) throw new Error('unexpected response (not a FOCUS marketplace?)');
+      res.json({ source: 'remote', url: base, ...data });
+    } catch (err) {
       const sample = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'marketplace-sample.json'), 'utf8')
       );
-      res.json({ source: 'sample', ...sample });
+      res.json({ source: 'sample', url: base, error: err.message, ...sample });
     }
   });
 
@@ -323,7 +368,7 @@ export function createApp() {
     try {
       let widgetPkg = pkg; // {manifest, html} for free/sample widgets
       if (code) {
-        const base = store.getConfig().marketplaceUrl;
+        const base = normalizeMarketplaceUrl(store.getConfig().marketplaceUrl);
         const r = await fetch(`${base}/api/redeem`, {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
@@ -390,6 +435,13 @@ export function createApp() {
   }
 
   return app;
+}
+
+function normalizeMarketplaceUrl(raw) {
+  let base = String(raw || '').trim();
+  if (!base) return '';
+  if (!/^https?:\/\//i.test(base)) base = `https://${base}`;
+  return base.replace(/\/+$/, '');
 }
 
 function substituteSecrets(text, instanceId) {

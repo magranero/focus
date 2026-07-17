@@ -6,7 +6,7 @@ import { api, localized } from '../api.js';
  * Hosts one sandboxed widget iframe and answers its bridge (postMessage)
  * calls: init / fetch / store / requestSetup / openSettings.
  */
-export default function WidgetFrame({ item, reload = 0, onConfigure, onRemove, onExport }) {
+export default function WidgetFrame({ item, reload = 0, onConfigure, onEditAI, onRemove, onExport }) {
   const { t, i18n } = useTranslation();
   const iframeRef = useRef(null);
   const [setupRequested, setSetupRequested] = useState(false);
@@ -82,6 +82,9 @@ export default function WidgetFrame({ item, reload = 0, onConfigure, onRemove, o
         <span className="wg-actions">
           {(manifest.settings || []).length > 0 && (
             <button title={t('dash.configure')} onClick={() => onConfigure(item)}>⚙︎</button>
+          )}
+          {item.widget.startsWith('custom/') && !generating && (
+            <button title={t('dash.editAI')} onClick={() => onEditAI(item)}>✎</button>
           )}
           {item.widget.startsWith('custom/') && !generating && (
             <button title={t('dash.publish')} onClick={() => onExport(item)}>↗</button>

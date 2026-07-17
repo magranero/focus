@@ -2,6 +2,22 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api, localized } from '../api.js';
 
+/** Renders help text with any URLs turned into clickable links. */
+function Linkify({ text }) {
+  const parts = String(text).split(/(https?:\/\/[^\s,)»"']+)/g);
+  return (
+    <>
+      {parts.map((p, i) =>
+        /^https?:\/\//.test(p) ? (
+          <a key={i} href={p} target="_blank" rel="noreferrer">{p}</a>
+        ) : (
+          p
+        )
+      )}
+    </>
+  );
+}
+
 function Modal({ onClose, children, wide }) {
   return (
     <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
@@ -10,19 +26,22 @@ function Modal({ onClose, children, wide }) {
   );
 }
 
-export function AICreatorModal({ at, onClose, refresh }) {
-  const { t } = useTranslation();
+export function AICreatorModal({ at, editItem, onClose, refresh }) {
+  const { t, i18n } = useTranslation();
   const [prompt, setPrompt] = useState('');
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState(null); // {credentialWarning}
   const [error, setError] = useState(null);
+  const isEdit = !!editItem;
 
   async function create() {
     if (!prompt.trim()) return;
     setBusy(true);
     setError(null);
     try {
-      const res = await api.aiCreate({ prompt: prompt.trim(), x: at.x, y: at.y });
+      const res = isEdit
+        ? await api.aiEdit({ instanceId: editItem.id, instruction: prompt.trim() })
+        : await api.aiCreate({ prompt: prompt.trim(), x: at.x, y: at.y });
       setResult(res);
       refresh();
       if (!res.credentialWarning) setTimeout(onClose, 1200);
@@ -35,13 +54,18 @@ export function AICreatorModal({ at, onClose, refresh }) {
 
   return (
     <Modal onClose={onClose}>
-      <h2>✨ {t('creator.title')}</h2>
+      <h2>✨ {isEdit
+        ? t('creator.editTitle', { name: localized(editItem.manifest?.name, i18n.language) })
+        : t('creator.title')}</h2>
+      {isEdit && editItem.manifest?.prompt && (
+        <p className="hint">«{editItem.manifest.prompt}»</p>
+      )}
       {!result ? (
         <>
           <textarea
             rows={3}
             autoFocus
-            placeholder={t('creator.placeholder')}
+            placeholder={isEdit ? t('creator.editPlaceholder') : t('creator.placeholder')}
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             onKeyDown={(e) => {
@@ -107,14 +131,14 @@ export function WidgetSettingsModal({ item, onClose, refresh, onSaved }) {
           </span>
           <input
             type={f.type === 'secret' ? 'password' : f.type === 'number' ? 'number' : 'text'}
-            placeholder={
-              f.type === 'secret' && secretsSet.includes(f.key) ? '••••••••' : f.help || ''
-            }
+            placeholder={f.type === 'secret' && secretsSet.includes(f.key) ? '••••••••' : ''}
             value={values[f.key] ?? ''}
             onChange={(e) => setValues((v) => ({ ...v, [f.key]: e.target.value }))}
           />
+          {f.help && (
+            <span className="hint help-guide">💡 <Linkify text={f.help} /></span>
+          )}
           {f.type === 'secret' && <span className="hint">🔒 {t('widgetSettings.secretHint')}</span>}
-          {f.type !== 'secret' && f.help && <span className="hint">{f.help}</span>}
         </label>
       ))}
       <div className="row spread">

@@ -53,10 +53,13 @@ const resources = {
         setupNeeded: 'This widget needs configuration',
         remove: 'Remove',
         configure: 'Configure',
+        editAI: 'Edit with AI',
         publish: 'Export for Marketplace'
       },
       creator: {
         title: 'Create a widget with AI',
+        editTitle: 'Edit “{{name}}” with AI',
+        editPlaceholder: 'Tell the agent what to change: “bigger digits”, “add seconds”, “use Fahrenheit”…',
         placeholder: 'Describe it: “La Liga standings”, “time in Tokyo”, “my website visits”…',
         create: 'Create',
         credWarning_one: 'We detected a credential in your text. It was moved to encrypted settings automatically — please don’t paste keys here again 🙏',
@@ -91,7 +94,8 @@ const resources = {
         redeemTitle: 'Already bought a widget?',
         redeemPlaceholder: 'Paste your install code',
         redeem: 'Install',
-        sampleNote: 'Showing sample catalog (marketplace not reachable).'
+        connected: 'Connected to {{url}}',
+        sampleNote: 'Not connected — showing sample catalog'
       },
       errors: { generic: 'Something went wrong' }
     }
@@ -147,10 +151,13 @@ const resources = {
         setupNeeded: 'Este widget necesita configuración',
         remove: 'Eliminar',
         configure: 'Configurar',
+        editAI: 'Editar con IA',
         publish: 'Exportar para el Marketplace'
       },
       creator: {
         title: 'Crear un widget con IA',
+        editTitle: 'Editar «{{name}}» con IA',
+        editPlaceholder: 'Dile al agente qué cambiar: «dígitos más grandes», «añade segundos», «usa Fahrenheit»…',
         placeholder: 'Descríbelo: «clasificación de La Liga», «hora en Tokio», «las visitas de mi web»…',
         create: 'Crear',
         credWarning_one: 'Detectamos una credencial en tu texto. La hemos movido automáticamente a los ajustes cifrados. Por favor, no vuelvas a pegar claves aquí 🙏',
@@ -185,7 +192,8 @@ const resources = {
         redeemTitle: '¿Ya compraste un widget?',
         redeemPlaceholder: 'Pega tu código de instalación',
         redeem: 'Instalar',
-        sampleNote: 'Mostrando catálogo de ejemplo (marketplace no disponible).'
+        connected: 'Conectado a {{url}}',
+        sampleNote: 'Sin conexión — mostrando catálogo de ejemplo'
       },
       errors: { generic: 'Algo ha ido mal' }
     }

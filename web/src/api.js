@@ -26,6 +26,7 @@ export const api = {
     req('PUT', `/api/widgets/${id}/store/${encodeURIComponent(key)}`, { value }),
   saveWidgetSettings: (id, values) => req('POST', `/api/widgets/${id}/settings`, { values }),
   aiCreate: (body) => req('POST', '/api/ai/create', body),
+  aiEdit: (body) => req('POST', '/api/ai/edit', body),
   catalog: () => req('GET', '/api/marketplace/catalog'),
   install: (body) => req('POST', '/api/marketplace/install', body),
   exportWidget: (id) => req('GET', `/api/widgets/${id}/export`)

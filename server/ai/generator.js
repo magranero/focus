@@ -1,6 +1,15 @@
 import crypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
 import { chat, PROVIDERS } from './providers.js';
-import { getConfig, getSecret, saveCustomWidget, upsertLayoutItem, getManifest } from '../store.js';
+import {
+  getConfig,
+  getSecret,
+  saveCustomWidget,
+  upsertLayoutItem,
+  getManifest,
+  resolveWidgetDir
+} from '../store.js';
 
 /**
  * Background widget-generation agents. Each job immediately reserves space on
@@ -22,7 +31,7 @@ You output EXACTLY this structure (no commentary before or after):
   "w": <grid width 2-6>,
   "h": <grid height 2-5>,
   "settings": [
-    {"key": "snake_case_key", "label": "Human label", "type": "text"|"secret"|"url"|"number", "required": true|false, "help": "where to get it"}
+    {"key": "snake_case_key", "label": "Human label", "type": "text"|"secret"|"url"|"number", "required": true|false, "help": "see rules below"}
   ],
   "allowedDomains": ["api.example.com"],
   "sampleData": { ...any JSON the widget can render as realistic dummy data... }
@@ -48,7 +57,8 @@ Rules for the HTML:
 Settings guidance:
 - Only ask for settings the widget truly needs. Prefer keyless public APIs (e.g. open-meteo.com for weather, no key).
 - Mark anything sensitive (API keys, tokens, passwords) as "type": "secret".
-- "allowedDomains" must list every host the widget will fetch from.`;
+- "allowedDomains" must list every host the widget will fetch from.
+- "help" is MANDATORY for every secret/API-key setting and must be a mini-guide in the user's locale containing, in this order: whether it is FREE or PAID, the exact URL where to get it, and the 2-4 short steps to obtain it. Example: "Gratis — en https://openweathermap.org/api: crea cuenta → My API keys → copia la key". For non-secret settings, a short example value is enough.`;
 
 function extractSpec(text) {
   const metaMatch = text.match(/===META===\s*([\s\S]*?)\s*===HTML===/);
@@ -124,6 +134,41 @@ export function createJob({ prompt, x = 0, y = 0, w = 3, h = 3, locale = 'en', e
   return job;
 }
 
+/**
+ * Re-chat with the agent about an existing custom widget: the model receives
+ * the current manifest + html and an edit instruction, and returns the full
+ * updated widget. The current widget keeps rendering; on failure it is
+ * restored untouched.
+ */
+export function createEditJob({ instanceId, instruction, locale = 'en', extraSecrets = [] }) {
+  const dir = resolveWidgetDir(`custom/${instanceId}`);
+  if (!dir) throw new Error('widget not found');
+  const manifest = getManifest(`custom/${instanceId}`);
+  const html = fs.readFileSync(path.join(dir, 'index.html'), 'utf8');
+
+  const job = {
+    id: `e${Date.now().toString(36)}${crypto.randomBytes(2).toString('hex')}`,
+    instanceId,
+    edit: { instruction, prevManifest: manifest, prevHtml: html },
+    prompt: instruction,
+    status: 'queued',
+    error: null,
+    createdAt: Date.now(),
+    locale,
+    extraSecrets
+  };
+  jobs.set(job.id, job);
+
+  saveCustomWidget(
+    instanceId,
+    { ...manifest, generating: true },
+    PLACEHOLDER_HTML(instruction)
+  );
+
+  pump();
+  return job;
+}
+
 export function listJobs() {
   return [...jobs.values()].sort((a, b) => b.createdAt - a.createdAt);
 }
@@ -138,6 +183,15 @@ function pump() {
     .catch((err) => {
       next.status = 'error';
       next.error = err.message;
+      if (next.edit) {
+        // Failed edit: put the previous working widget back untouched.
+        saveCustomWidget(
+          next.instanceId,
+          { ...next.edit.prevManifest, generating: false, lastEditError: err.message },
+          next.edit.prevHtml
+        );
+        return;
+      }
       const manifest = getManifest(`custom/${next.id}`);
       saveCustomWidget(
         next.id,
@@ -159,12 +213,35 @@ async function run(job) {
         .map((s) => s.key)
         .join(', ')}. Declare them in "settings" as type "secret" and use {{settings.<key>}} placeholders in requests.`
     : '';
+  const userContent = job.edit
+    ? `Locale: ${job.locale}
+You previously generated this widget. Here is its current state:
+
+===META===
+${JSON.stringify(
+        {
+          name: job.edit.prevManifest.name,
+          emoji: job.edit.prevManifest.emoji,
+          w: job.edit.prevManifest.defaultSize?.w,
+          h: job.edit.prevManifest.defaultSize?.h,
+          settings: job.edit.prevManifest.settings,
+          allowedDomains: job.edit.prevManifest.allowedDomains,
+          sampleData: job.edit.prevManifest.sampleData
+        },
+        null,
+        2
+      )}
+===HTML===
+${job.edit.prevHtml}
+
+The user wants this change: ${job.edit.instruction}${secretNote}
+
+Return the COMPLETE updated widget in the same ===META=== / ===HTML=== format. Keep everything that still works; only change what the instruction requires.`
+    : `Locale: ${job.locale}\nWidget request: ${job.prompt}${secretNote}`;
+
   const messages = [
     { role: 'system', content: SYSTEM_PROMPT },
-    {
-      role: 'user',
-      content: `Locale: ${job.locale}\nWidget request: ${job.prompt}${secretNote}`
-    }
+    { role: 'user', content: userContent }
   ];
   let spec;
   let lastErr;
@@ -181,25 +258,31 @@ async function run(job) {
   if (!spec) throw lastErr;
 
   const manifest = {
-    id: job.id,
+    id: job.instanceId,
     name: String(spec.name).slice(0, 60),
     emoji: spec.emoji || '🧩',
     version: '1.0.0',
     author: 'you',
     generating: false,
-    prompt: job.prompt,
+    prompt: job.edit ? job.edit.prevManifest.prompt : job.prompt,
+    edits: job.edit
+      ? [...(job.edit.prevManifest.edits || []), job.edit.instruction]
+      : undefined,
     defaultSize: { w: clamp(spec.w, 2, 6, 3), h: clamp(spec.h, 2, 5, 3) },
     settings: Array.isArray(spec.settings) ? spec.settings : [],
     allowedDomains: Array.isArray(spec.allowedDomains) ? spec.allowedDomains : [],
     sampleData: spec.sampleData ?? null
   };
-  saveCustomWidget(job.id, manifest, spec.html);
-  upsertLayoutItem({
-    id: job.id,
-    w: manifest.defaultSize.w,
-    h: manifest.defaultSize.h,
-    placeholder: false
-  });
+  saveCustomWidget(job.instanceId, manifest, spec.html);
+  if (!job.edit) {
+    // New widgets adopt the model's suggested size; edits keep the user's.
+    upsertLayoutItem({
+      id: job.instanceId,
+      w: manifest.defaultSize.w,
+      h: manifest.defaultSize.h,
+      placeholder: false
+    });
+  }
   job.status = 'done';
 }
 

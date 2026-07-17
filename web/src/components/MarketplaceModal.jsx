@@ -50,7 +50,16 @@ export default function MarketplaceModal({ state, onClose, refresh }) {
           <div className="ring" />
         ) : (
           <>
-            {catalog.source === 'sample' && <p className="hint">{t('market.sampleNote')}</p>}
+            {catalog.source === 'remote' ? (
+              <p className="conn ok">
+                ● {t('market.connected', { url: catalog.url })}
+              </p>
+            ) : (
+              <p className="conn warn">
+                ● {t('market.sampleNote')}
+                {catalog.error && <span className="hint"> — {catalog.error}</span>}
+              </p>
+            )}
             <div className="market-grid">
               {catalog.widgets.map((w) => (
                 <div key={w.id} className="market-card">

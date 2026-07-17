@@ -163,6 +163,12 @@ body.gs-moving .wg iframe { pointer-events: none; }
 .field { display: block; margin: 10px 0; font-size: 13px; }
 .field > span { color: var(--muted); }
 
+.conn { font-size: 12.5px; margin: 2px 0 0; }
+.conn.ok { color: #4ade80; }
+.conn.warn { color: #fbbf24; }
+.help-guide { display: block; margin-top: 3px; line-height: 1.5; }
+.help-guide a { color: var(--accent); }
+
 .market-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin: 12px 0; }
 .market-card {
   display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--border);

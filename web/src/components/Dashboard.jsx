@@ -12,9 +12,11 @@ export default function Dashboard({ state, refresh, onOpenSettings, onOpenMarket
   const gridRef = useRef(null);
   const gridElRef = useRef(null);
   const [creatorAt, setCreatorAt] = useState(null); // {x, y} | null
+  const [editing, setEditing] = useState(null); // item | null — re-chat with the agent
   const [configuring, setConfiguring] = useState(null); // item | null
   const [adding, setAdding] = useState(false);
   const [reloadMap, setReloadMap] = useState({}); // instanceId -> counter, bumps reload the iframe
+  const lastMoveRef = useRef(0); // suppresses the ghost click that follows a drag/resize
 
   const items = state.layout.items;
   const activeJobs = state.jobs.filter(
@@ -30,7 +32,7 @@ export default function Dashboard({ state, refresh, onOpenSettings, onOpenMarket
         margin: 8,
         float: true,
         handle: '.wg-head',
-        resizable: { handles: 'se' }
+        resizable: { handles: 'n,e,s,w,ne,se,sw,nw' }
       },
       gridElRef.current
     );
@@ -46,7 +48,10 @@ export default function Dashboard({ state, refresh, onOpenSettings, onOpenMarket
       }));
       api.saveLayout(positions).catch(() => {});
     });
-    const toggle = (on) => () => document.body.classList.toggle('gs-moving', on);
+    const toggle = (on) => () => {
+      document.body.classList.toggle('gs-moving', on);
+      lastMoveRef.current = Date.now();
+    };
     grid.on('dragstart', toggle(true));
     grid.on('resizestart', toggle(true));
     grid.on('dragstop', toggle(false));
@@ -63,7 +68,12 @@ export default function Dashboard({ state, refresh, onOpenSettings, onOpenMarket
     const els = [...gridElRef.current.querySelectorAll('[data-item-id]')];
     for (const el of els) {
       const item = items.find((i) => i.id === el.getAttribute('data-item-id'));
-      if (!item) continue;
+      if (!item) {
+        // Deregister from gridstack but let React own the DOM removal —
+        // pulling the node out here blows up React's reconciler (issue #1).
+        if (el.gridstackNode) grid.removeWidget(el, false);
+        continue;
+      }
       if (!el.gridstackNode) {
         grid.makeWidget(el);
       } else {
@@ -78,6 +88,9 @@ export default function Dashboard({ state, refresh, onOpenSettings, onOpenMarket
   // --- click empty space -> AI creator ---
   const onGridClick = useCallback((e) => {
     if (e.target !== gridElRef.current) return;
+    // A drop at the end of a drag/resize also fires a click on the grid
+    // background; don't mistake it for "create a widget here" (issue #6).
+    if (Date.now() - lastMoveRef.current < 400) return;
     const rect = gridElRef.current.getBoundingClientRect();
     const cellW = rect.width / 12;
     const x = Math.min(11, Math.floor((e.clientX - rect.left) / cellW));
@@ -86,8 +99,9 @@ export default function Dashboard({ state, refresh, onOpenSettings, onOpenMarket
   }, []);
 
   async function removeItem(item) {
+    // Only deregister from gridstack; React removes the DOM node on refresh.
     const el = gridElRef.current.querySelector(`[data-item-id="${item.id}"]`);
-    if (el) gridRef.current.removeWidget(el, true);
+    if (el?.gridstackNode) gridRef.current.removeWidget(el, false);
     await api.removeWidget(item.id);
     refresh();
   }
@@ -137,6 +151,7 @@ export default function Dashboard({ state, refresh, onOpenSettings, onOpenMarket
                 item={item}
                 reload={reloadMap[item.id] || 0}
                 onConfigure={setConfiguring}
+                onEditAI={setEditing}
                 onRemove={removeItem}
                 onExport={exportItem}
               />
@@ -151,6 +166,13 @@ export default function Dashboard({ state, refresh, onOpenSettings, onOpenMarket
         <AICreatorModal
           at={creatorAt}
           onClose={() => setCreatorAt(null)}
+          refresh={refresh}
+        />
+      )}
+      {editing && (
+        <AICreatorModal
+          editItem={editing}
+          onClose={() => setEditing(null)}
           refresh={refresh}
         />
       )}
